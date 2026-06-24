@@ -17,6 +17,7 @@ import android.media.MediaPlayer
 import android.os.IBinder
 import com.test.safetyconnect.R
 import com.test.safetyconnect.foreground.emf.EmfDetector
+import com.test.safetyconnect.foreground.harsh.AccelerometerWindow
 import com.test.safetyconnect.foreground.harsh.HarshDrivingDetector
 import com.test.safetyconnect.foreground.lifecycle.ServiceLifecycleManager
 import com.test.safetyconnect.foreground.permission.PermissionValidator
@@ -44,6 +45,7 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
 
     private  var speedManager: SpeedManager?=null
     private  var emfDetector: EmfDetector?=null
+    private  val accelerometerWindow: AccelerometerWindow = AccelerometerWindow()
     private  var harshDrivingDetector: HarshDrivingDetector?=null
     private  var notificationManager: com.test.safetyconnect.foreground.notification.NotificationManager?=null
     private  var lifecycleManager: ServiceLifecycleManager?=null
@@ -86,7 +88,7 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
 
     private fun initializeManagers() {
         speedManager = SpeedManager()
-        harshDrivingDetector = HarshDrivingDetector()
+        harshDrivingDetector = HarshDrivingDetector(accelerometerWindow)
         notificationManager = com.test.safetyconnect.foreground.notification.NotificationManager(this)
         lifecycleManager = ServiceLifecycleManager(this)
         initMediaPlayer()
@@ -118,7 +120,7 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
     private fun initSensors() {
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         emfSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
-        accelerometerSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        accelerometerSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         registerSensors()
     }
 
@@ -134,11 +136,23 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
 
     override fun onSensorChanged(sensorEvent: SensorEvent?) {
         sensorEvent?.let {
-            if (it.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-                coroutineScope.launch {
-                    handleMagneticFieldSensor(it)
+            when (it.sensor.type) {
+                Sensor.TYPE_MAGNETIC_FIELD -> {
+                    coroutineScope.launch {
+                        handleMagneticFieldSensor(it)
+                    }
+                }
+                Sensor.TYPE_LINEAR_ACCELERATION -> {
+                    handleLinearAcceleration(it)
                 }
             }
+        }
+    }
+
+    private fun handleLinearAcceleration(sensorEvent: SensorEvent) {
+        val values = sensorEvent.values
+        if (values != null && values.size >= 3) {
+            accelerometerWindow.add(values[0], values[1], values[2])
         }
     }
 

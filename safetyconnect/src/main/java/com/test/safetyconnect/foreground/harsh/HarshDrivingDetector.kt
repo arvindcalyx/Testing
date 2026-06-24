@@ -11,7 +11,9 @@ import java.util.concurrent.atomic.AtomicLong
  * Manages harsh driving detection (acceleration and braking)
  * Uses speed difference over time window to detect harsh events
  */
-class HarshDrivingDetector {
+class HarshDrivingDetector(
+    private val accelerometerWindow: AccelerometerWindow
+) {
 
     private val jerkMap = LinkedHashMap<Long, Float>()
     private val lastHarshDrivingDetected = AtomicLong(0L)
@@ -55,9 +57,17 @@ class HarshDrivingDetector {
         val eventType = if (harshDrivingDiff < 0) "harshBreaking" else "harshAcceleration"
         val threshold = SafetyConnectSDK.sensorFilters?.harshDrivingThresholdInKm ?: 3f
         val callbackFrequency = SafetyConnectSDK.sensorFilters?.harshDrivingCallbackFrequency ?: 90000L
+        val accelThreshold = SafetyConnectSDK.sensorFilters?.harshAccelMps2Threshold ?: 3.0f
+        val peakAccel = accelerometerWindow.peakMagnitudeWithin(2000L)
+
+        // Require GPS speed-delta AND accelerometer magnitude to agree within
+        // the same 2s window, and that the vehicle is actually moving.
+        val signalsAgree = kotlin.math.abs(harshDrivingDiff) >= threshold &&
+            peakAccel >= accelThreshold &&
+            currentSpeed >= stationarySpeedThreshold
 
         synchronized(lastHarshDrivingDetected) {
-            if (kotlin.math.abs(harshDrivingDiff) >= threshold) {
+            if (signalsAgree) {
                 if (currentTimeMillis - lastHarshDrivingDetected.get() >= callbackFrequency) {
                     lastHarshDrivingDetected.set(currentTimeMillis)
                     notifyAllHarshDrivingListener(
