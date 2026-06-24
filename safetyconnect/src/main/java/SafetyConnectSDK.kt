@@ -382,6 +382,8 @@ data class SensorFilters(
     var disableEmfMinimumThresholdInKm: Float? = 3.0f,
     var safetyType: SafetyTypes? = null,
     val stationarySpeedKmh: Float = 2f,
+    var gateOnInVehicle: Boolean = true,
+    val inVehicleSustainSeconds: Int = 30,
     val configuredEmfBeepDistance: Double? = 10.0,
     val configuredEmfBeepInterval: Long? = 90 * 1000L
 

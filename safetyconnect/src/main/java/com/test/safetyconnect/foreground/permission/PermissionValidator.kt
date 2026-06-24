@@ -71,6 +71,24 @@ object PermissionValidator {
     }
 
     /**
+     * Check if the ACTIVITY_RECOGNITION runtime permission is granted.
+     * Only a runtime permission on API 29+ (Android Q); granted at install
+     * on lower API levels, so returns true there.
+     * @param context Android context
+     * @return true if activity recognition is permitted
+     */
+    fun hasActivityRecognitionPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    /**
      * Check if notification permissions are enabled
      * @param context Android context
      * @return true if notifications are enabled

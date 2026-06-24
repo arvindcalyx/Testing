@@ -16,6 +16,7 @@ import android.location.Location
 import android.media.MediaPlayer
 import android.os.IBinder
 import com.test.safetyconnect.R
+import com.test.safetyconnect.foreground.activity.TripGate
 import com.test.safetyconnect.foreground.emf.EmfDetector
 import com.test.safetyconnect.foreground.harsh.AccelerometerWindow
 import com.test.safetyconnect.foreground.harsh.HarshDrivingDetector
@@ -49,6 +50,10 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
     private  var harshDrivingDetector: HarshDrivingDetector?=null
     private  var notificationManager: com.test.safetyconnect.foreground.notification.NotificationManager?=null
     private  var lifecycleManager: ServiceLifecycleManager?=null
+    private  var tripGate: TripGate?=null
+
+    // Trip-gate suppression logging (log once per state change, no spam)
+    private var gateSuppressionLogged = false
 
     // Sensors
     private var sensorManager: SensorManager? = null
@@ -92,6 +97,21 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
         notificationManager = com.test.safetyconnect.foreground.notification.NotificationManager(this)
         lifecycleManager = ServiceLifecycleManager(this)
         initMediaPlayer()
+        if (tripGate == null) {
+            tripGate = TripGate()
+            startTripGate()
+        }
+    }
+
+    private fun startTripGate() {
+        if (PermissionValidator.hasActivityRecognitionPermission(this)) {
+            tripGate?.start(this)
+        } else {
+            // Graceful fallback: keep telematics running for users who have not
+            // granted activity recognition rather than gating everything off.
+            Timber.w("ACTIVITY_RECOGNITION not granted; disabling trip gate (gateOnInVehicle=false)")
+            SafetyConnectSDK.sensorFilters?.gateOnInVehicle = false
+        }
     }
 
 
@@ -185,6 +205,7 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
             harshDrivingDetector == null ||
             notificationManager == null ||
             lifecycleManager == null ||
+            tripGate == null ||
             emfDetector == null) {
             initializeManagers()
         }
@@ -278,6 +299,8 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
         speedManager?.clear()
         harshDrivingDetector?.clear()
         emfDetector?.clear()
+        tripGate?.stop(this)
+        tripGate = null
     }
 
     private fun stopForegroundService() {
@@ -298,6 +321,20 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
     }
 
     private fun processLocationUpdate(location: Location) {
+        // Gate the speed/harsh pipeline on actually driving (IN_VEHICLE).
+        if (SafetyConnectSDK.sensorFilters?.gateOnInVehicle == true &&
+            tripGate?.isDriving?.value != true) {
+            if (!gateSuppressionLogged) {
+                Timber.i("Trip gate: user not driving, suppressing speed/harsh detection")
+                gateSuppressionLogged = true
+            }
+            return
+        }
+        if (gateSuppressionLogged) {
+            Timber.i("Trip gate: driving detected, resuming speed/harsh detection")
+            gateSuppressionLogged = false
+        }
+
         when (val result = speedManager?.processLocation(location)) {
             is SpeedResult.Stationary -> {
                 handleStationarySpeed(location)
