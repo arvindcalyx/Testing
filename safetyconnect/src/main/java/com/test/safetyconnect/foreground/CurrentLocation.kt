@@ -17,7 +17,6 @@ import androidx.core.location.LocationRequestCompat
 import com.test.safetyconnect.BuildConfig
 import com.test.safetyconnect.foreground.permission.PermissionValidator
 import com.test.safetyconnect.foreground.permission.PermissionValidator.PermissionDenialReason
-import com.test.safetyconnect.foreground.util.roundToTwoDecimals
 
 class CurrentLocation(var context: Context) : LocationListener {
     private var locationManager: LocationManager? = null
@@ -94,7 +93,7 @@ class CurrentLocation(var context: Context) : LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
-        getLocation.onLocationChanged(location.roundToTwoDecimals())
+        getLocation.onLocationChanged(location)
     }
 
     override fun onProviderEnabled(s: String) {
