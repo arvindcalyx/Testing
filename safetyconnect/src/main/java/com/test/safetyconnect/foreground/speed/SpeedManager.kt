@@ -1,5 +1,6 @@
 package com.test.safetyconnect.foreground.speed
 
+import SafetyConnectSDK
 import android.location.Location
 import com.test.safetyconnect.foreground.util.convertToKmPerHr
 import com.test.safetyconnect.model.SpeedReading
@@ -16,7 +17,6 @@ class SpeedManager {
         private const val TAG = "SpeedManager"
         private const val MAX_LOCATIONS = 5
         private const val MAX_ACCURACY_THRESHOLD = 50f
-        private const val STATIONARY_SPEED_THRESHOLD = 10f
         private const val MAX_REALISTIC_SPEED = 140f
         private const val MIN_TIME_DELTA_SECONDS = 0.5f
         private const val MEDIAN_SPEED_VARIANCE_THRESHOLD = 1.5f
@@ -56,7 +56,8 @@ class SpeedManager {
         Timber.tag(TAG).d("GPS speed: %.2f km/h", currentSpeed)
 
         // STEP 2: Handle stationary
-        if (currentSpeed < STATIONARY_SPEED_THRESHOLD) {
+        val stationarySpeedThreshold = SafetyConnectSDK.sensorFilters?.stationarySpeedKmh ?: 2f
+        if (currentSpeed < stationarySpeedThreshold) {
             Timber.tag(TAG).i("Stationary: %.2f km/h", currentSpeed)
             locationHistory.clear()
             speedReadings.clear()

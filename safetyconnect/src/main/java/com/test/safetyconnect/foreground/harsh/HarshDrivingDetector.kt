@@ -15,10 +15,10 @@ class HarshDrivingDetector {
 
     private val jerkMap = LinkedHashMap<Long, Float>()
     private val lastHarshDrivingDetected = AtomicLong(0L)
-    private val stationarySpeedThreshold = 3f
 
     fun analyze(location: Location?) {
         val timeInterval = SafetyConnectSDK.sensorFilters?.harshDrivingDurationFrequency ?: 3000L
+        val stationarySpeedThreshold = SafetyConnectSDK.sensorFilters?.stationarySpeedKmh ?: 2f
         val currentTimeMillis = System.currentTimeMillis()
 
         val isValidSpeed = location?.hasSpeed() == true &&
@@ -41,6 +41,7 @@ class HarshDrivingDetector {
     }
 
     private fun processHarshDriving(currentSpeed: Float, currentTimeMillis: Long) {
+        val stationarySpeedThreshold = SafetyConnectSDK.sensorFilters?.stationarySpeedKmh ?: 2f
         val validSpeeds = jerkMap.values.filter { it >= stationarySpeedThreshold }
 
         if (validSpeeds.isEmpty()) {
