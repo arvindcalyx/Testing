@@ -1,0 +1,5 @@
+
+rootProject.name = "Safety Connect"
+include ':app'
+include ':safetyconnect'
+include ':capturelibrary'

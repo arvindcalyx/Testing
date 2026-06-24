@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">CaptureLibrary</string>
+
+    <string name="doc_warning">Warning - To avoid rejection, Please ensure photo is clear and all 4 corners of ID proof are visible. \n\nकृपया सुनिश्चित करें कि फोटो स्पष्ट होनी चाहिए और आई-डी प्रूफ के सभी 4 कोनों के साथ पूरी जानकारी दिखाई दे |</string>
+    <string name="capture_instruction">Please capture your document in Given Frame with Clear Photo</string>
+    <string name="camera_feature_description">Note - You can tap to Focus and swipe to adjust Brightness</string>
+    <string name="camera_not_supported_error_msg">This device does not support Camera</string>
+    <string name="camera_permission_not_granted">Camera permission is denied, therefore it could not be opened.</string>
+    <string name="rotate_camera">Rotate</string>
+    <string name="normal_view_text">Original</string>
+    <string name="horizontal_view_text">Landscape</string>
+    <string name="vertical_view_text">Portrait</string>
+
+    <string name="crop__saving">Saving picture…</string>
+    <string name="crop__wait">Please wait…</string>
+    <string name="crop__pick_error">No image sources available</string>
+    <string name="crop__done">DONE</string>
+    <string name="crop__cancel" tools:ignore="ButtonCase">CANCEL</string>
+</resources>

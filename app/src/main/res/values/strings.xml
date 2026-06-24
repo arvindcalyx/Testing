@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Safety Connect</string>
+    <string name="click_to_capture_and_detect_image_for_safety">Click To capture and Detect Image <b>(for safety)</b></string>
+    <string name="click_to_capture_and_detect_image_for_bike_helmet_only">Click To capture and Detect Image <b>(for bike_helmet only))</b></string>
+    <string name="start_tracking">Start Tracking</string>
+    <string name="upload_image">Upload Image</string>
+    <string name="harsh_acceleration_data_to_be_updated_here">harsh acceleration data to be updated here</string>
+    <string name="start_service">Start Service</string>
+    <string name="stop_service">Stop Service</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="capture_margin_18">18dp</dimen>
+    <dimen name="capture_margin_24">24dp</dimen>
+    <dimen name="capture_description_text_size">13sp</dimen>
+    <dimen name="capture_padding_8">8dp</dimen>
+    <dimen name="capture_button_width_60">60dp</dimen>
+
+    <dimen name="crop__bar_height">56dp</dimen>
+</resources>

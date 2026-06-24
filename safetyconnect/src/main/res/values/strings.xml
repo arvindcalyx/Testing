@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Accident Detector</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="please_provide">Please provide permission for smooth functionality of app.</string>
+    <string name="ok">Ok</string>
+    <string name="sorry_we_would">Sorry! We could not get your pic. Please try again!</string>
+    <string name="permissions_not_granted">Permission was not gran̥ted.</string>
+    <string name="retail_sr">app cannot run because it has not been granted permission.</string>
+    <string name="settings">Seting</string>
+    <string name="cancel">Cancel</string>
+    <string name="open_camera_problem_msg">Open Camera Problem</string>
+    <string name="loading_text">Loading Please wait ....</string>
+    <string name="please_mark_the_correctness_of_data_in_front_of_all_the_parameters">Please mark the correctness of data in front of all the parameters</string>
+    <string name="correct">correct</string>
+    <string name="harness_true">Harness = true</string>
+    <string name="not_correct">incorrect</string>
+    <string name="submit">Submit</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="click_to_capture_and_detect_image_for_safety">Click To capture and Detect Image <b>(for safety)</b></string>
+    <string name="click_to_capture_and_detect_image_for_bike_helmet_only">Click To capture and Detect Image <b>(for bike_helmet only))</b></string>
+    <string name="start_tracking">Start Tracking</string>
+    <string name="upload_image">Upload Image</string>
+    <string name="safety_connect_service">Safety Connect Service</string>
+    <string name="safety_connect_active">Safety Connect Active</string>
+</resources>

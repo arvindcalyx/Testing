@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/capture_background_color">
+
+    <TextView
+        android:id="@+id/tv_description"
+        style="@style/CaptureLibraryTextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="@dimen/capture_margin_18"
+        android:layout_marginTop="@dimen/capture_margin_18"
+        android:layout_marginEnd="@dimen/capture_margin_18"
+        android:layout_marginBottom="@dimen/capture_margin_18"
+        android:text="@string/capture_instruction"
+        android:visibility="gone" />
+
+    <RelativeLayout
+        android:id="@+id/cameraViewLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <com.otaliastudios.cameraview.CameraView
+            android:id="@+id/cameraView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cameraExperimental="false"
+            app:cameraGesturePinch="exposureCorrection"
+            app:cameraGestureScrollHorizontal="exposureCorrection"
+            app:cameraGestureScrollVertical="exposureCorrection"
+            app:cameraGestureTap="autoFocus" />
+
+        <!--        <View-->
+        <!--            android:id="@+id/camera_frame"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:background="@drawable/doc_camera_frame" />-->
+
+        <View
+            android:id="@+id/camera_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/camera_size_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/camera_tools_layout"
+        android:layout_marginStart="@dimen/capture_margin_18"
+        android:layout_marginEnd="@dimen/capture_margin_18"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/cameraVerticalViewSwitch"
+            style="@style/CaptureLibraryTextStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="start"
+            android:padding="5dp"
+            android:text="@string/vertical_view_text"
+            android:textColor="@color/size_text_color" />
+
+
+        <TextView
+            android:id="@+id/cameraFullViewSwitch"
+            style="@style/CaptureLibraryTextStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/normal_view_text"
+            android:textColor="@color/size_text_color" />
+
+        <TextView
+            android:id="@+id/cameraHorizontalViewSwitch"
+            style="@style/CaptureLibraryTextStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="end"
+            android:padding="5dp"
+            android:text="@string/horizontal_view_text"
+            android:textColor="@color/size_text_color" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_warning"
+        style="@style/CaptureLibraryTextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/capture_margin_18"
+        android:layout_marginTop="@dimen/capture_margin_18"
+        android:layout_marginEnd="@dimen/capture_margin_18"
+        android:layout_marginBottom="@dimen/capture_margin_18"
+        android:text="@string/camera_feature_description" />
+
+    <RelativeLayout
+        android:id="@+id/camera_tools_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="@dimen/capture_margin_18">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/torchSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerInParent="true" />
+
+        <Button
+            android:id="@+id/capture"
+            android:layout_width="@dimen/capture_button_width_60"
+            android:layout_height="@dimen/capture_button_width_60"
+            android:layout_centerInParent="true"
+            android:background="@drawable/ic_camera_capture_plain" />
+
+        <ImageView
+            android:id="@+id/switchCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true"
+            android:contentDescription="@string/rotate_camera"
+            android:src="@drawable/switch_camera_drawable" />
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

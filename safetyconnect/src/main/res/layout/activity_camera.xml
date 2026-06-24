@@ -1,0 +1,58 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true">
+
+    <ImageView
+        android:id="@+id/clickedpic"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/footer" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/footer"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:background="#9999"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="If Photo is BLURRED or NOT CLEAR, please take photo again, else, request will get rejected at back end."
+        android:textColor="#fff"
+        android:textSize="16sp" />
+
+    <LinearLayout
+        android:id="@+id/footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingBottom="5dp"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/approvebtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_weight="1"
+            android:textColor="@color/white"
+            android:background="@drawable/rounded_red_color"
+            android:text="Approve" />
+
+        <Button
+            android:id="@+id/retakebtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="12dp"
+            android:layout_weight="1"
+            android:textColor="@color/white"
+            android:background="@drawable/rounded_red_color"
+            android:text="Retake" />
+    </LinearLayout>
+</RelativeLayout>
