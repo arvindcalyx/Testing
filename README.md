@@ -1,5 +1,10 @@
 # SafetyConnect SDK (Reference)
 
+> **This repository is a personal AI-reasoning sandbox** (not production). Start with
+> **`CLAUDE.md`** (operating model) and **`HANDOFF.md`** (current state); see
+> **`DECISIONS_LOG.md`** for what's designed/validated/implemented and **`WATCHPOINTS.md`**
+> for cautions. The rest of this README describes the SDK under study.
+
 An Android telematics SDK that detects vehicle-related safety events on-device — overspeed, harsh braking / acceleration, EMF anomalies — and consumes a backend for crash detection.
 
 > **Status:** reference / sample. URLs, ports, and credentials in this repository are intentionally generic placeholders (`api.example.com`, `127.0.0.1`, `Basic dGVzdDp0ZXN0` = `test:test`). Replace before any non-trivial use.
