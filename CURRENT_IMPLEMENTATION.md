@@ -242,30 +242,30 @@ posts then immediately `cancel(NOTIFICATION_ID)`.
 **Sequence — location to overspeed callback:**
 ```mermaid
 sequenceDiagram
-    participant OS as Android LocationManager (GPS_PROVIDER)
+    participant OS as Android GPS (LocationManager)
     participant CL as CurrentLocation
     participant SVC as SafetyConnectService
     participant SM as SpeedManager
     participant SDK as SafetyConnectSDK
     participant HOST as Host callback
 
-    OS->>CL: onLocationChanged(location) [main thread]
+    OS->>CL: onLocationChanged(location) on main thread
     CL->>SVC: getLocation.onLocationChanged(location)
-    alt serviceKilled
-        SVC->>SVC: notificationManager.hideNotification(); return
-    else
+    alt serviceKilled is true
+        SVC-->>SVC: hideNotification() then return
+    else not killed
         SVC->>SVC: processLocationUpdate(location)
-        Note over SVC: gate guard (DEBUG_BYPASS_TRIP_GATE=true → skipped)
+        Note over SVC: gate guard skipped because DEBUG_BYPASS_TRIP_GATE is true
         SVC->>SM: processLocation(location)
-        SM-->>SVC: SpeedResult (Stationary | Collecting | Valid | Rejected)
-        alt Valid
+        SM-->>SVC: SpeedResult (Stationary, Collecting, Valid or Rejected)
+        alt result is Valid
             SVC->>SVC: handleValidSpeed(currentSpeed, medianSpeed, location)
-            alt maxSpeedThreshold <= medianSpeed
-                SVC->>SVC: fireOverSpeedingEvent (throttle speedCallBackFrequency)
+            alt medianSpeed ≥ maxSpeedThreshold
+                SVC->>SVC: fireOverSpeedingEvent (throttled by speedCallBackFrequency)
                 SVC->>SDK: notifyAllOverSpeedDetectedListener(location, speedDetectionEdge)
                 SDK->>HOST: overSpeedDetected(location, speedDetectionEdge)
             end
-            SVC->>SVC: notificationManager.showNotification(emf, "Speed: N km/hr")
+            SVC->>SVC: showNotification(emf, "Speed N km/hr")
         end
     end
 ```
@@ -277,12 +277,12 @@ sequenceDiagram
     participant LM as ServiceLifecycleManager
     participant NM as NotificationManager
 
-    SVC->>SVC: onCreate → startForegroundService()
-    SVC->>LM: startForeground(id=1, createNotification("EMF: ","SPEED: "))
-    SVC->>SVC: onStartCommand → Manager.runTask{ runServiceForFirstTime() }
-    SVC->>NM: showNotification("","")
-    NM->>NM: notify(1, "Speed: N/A"/"EMF: N/A") then cancel(1)
-    Note over SVC,NM: later, speed/EMF handlers call showNotification(...) to re-post
+    SVC->>SVC: onCreate then startForegroundService()
+    SVC->>LM: startForeground(id 1, createNotification)
+    SVC->>SVC: onStartCommand then Manager.runTask runServiceForFirstTime()
+    SVC->>NM: showNotification(empty, empty)
+    NM->>NM: notify(1, N/A texts) then cancel(1)
+    Note over SVC,NM: later, speed or EMF handlers call showNotification to re-post
 ```
 
 ---
