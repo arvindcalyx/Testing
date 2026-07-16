@@ -71,6 +71,13 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
     // State
     private var isFirstRun = true
     private var serviceKilled = false
+
+    // DEBUG EXPERIMENT ONLY — bypasses the TripGate IN_VEHICLE suppression to
+    // isolate the speed/overspeed regression. Set to false (or delete this flag
+    // and the "!DEBUG_BYPASS_TRIP_GATE &&" guard in processLocationUpdate) to
+    // restore the gated behaviour. Does not touch SpeedManager, thresholds,
+    // harsh-driving, CurrentLocation, callbacks, or SDK initialization.
+    private val DEBUG_BYPASS_TRIP_GATE = true
     private val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
 
     // UI State
@@ -322,7 +329,9 @@ class SafetyConnectService : Service(), SensorEventListener, CurrentLocation.Get
 
     private fun processLocationUpdate(location: Location) {
         // Gate the speed/harsh pipeline on actually driving (IN_VEHICLE).
-        if (SafetyConnectSDK.sensorFilters?.gateOnInVehicle == true &&
+        // DEBUG_BYPASS_TRIP_GATE short-circuits this suppression for the regression experiment.
+        if (!DEBUG_BYPASS_TRIP_GATE &&
+            SafetyConnectSDK.sensorFilters?.gateOnInVehicle == true &&
             tripGate?.isDriving?.value != true) {
             if (!gateSuppressionLogged) {
                 Timber.i("Trip gate: user not driving, suppressing speed/harsh detection")
