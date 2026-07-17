@@ -523,12 +523,23 @@ Net: **2 new files, 2 modified files, ~1 changed decision expression.**
 7. **placeId longevity.** Place IDs are storable but can change (~12-month refresh
    guidance). A proxy-cache concern (invalidate on refresh) once the deferred dedup lands;
    not an on-device concern in the MVP.
-8. **Alternative to de-risk the licence — Navigation SDK.** Google's Navigation SDK for
-   Android exposes a built-in speed-limit/speedometer with over-limit alerts and may avoid
-   the separate Speed Limits licence, at the cost of adopting a different premium mobility
-   product and a heavier integration. Worth a feasibility spike as plan B if the Asset
-   Tracking licence proves impractical; it does not change the SDK-side seam (still a
-   posted-limit source feeding the same comparand).
+8. **Alternative to de-risk the licence — Navigation SDK (heavily caveated).** Google's
+   Navigation SDK for Android has a built-in speedometer and over-limit alerts and *may*
+   avoid the separate Speed Limits licence — but an API check (July 2026) shows it is
+   **not** a drop-in posted-limit source for our comparand. It does **not** expose the raw
+   posted limit: the absolute value is **engine-internal** (rendered in the SDK's own
+   speedometer control), and the only programmatic surface is
+   `SpeedingListener.onSpeedingUpdated(percentageAboveLimit, severity)` — Google's own
+   MAJOR/MINOR/NONE speeding verdict on its own thresholds (`percentage = -1`, severity
+   `NONE` when the limit or speed is unknown), not a number that can be fed into
+   `handleValidSpeed`. It also exposes no current-road `placeId` (`RouteSegment`/`NavInfo`
+   are route and turn-by-turn constructs, not road-network identity), and its speed alerts
+   require an **active turn-by-turn navigation session** to a destination — a fundamental
+   mismatch for a passive background telematics SDK that monitors free driving. Adopting it
+   therefore means replacing the median/`maxSpeedThreshold` pipeline with Google's speeding
+   verdict and navigation UX wholesale — a far larger change than this RFC, so treat it as a
+   **separate product decision, not a lightweight plan B**. (Verified via Google's search
+   index; the reference pages are egress-blocked in this environment — **[VERIFY LIVE]**.)
 9. **Reused-client caveat.** The crash `OkHttpClient` injects a global
    `Authorization: Basic test:test` header and uses 60 s timeouts — unsuitable here. The
    tracker therefore reuses the OkHttp *library* with its **own** short-timeout client and
@@ -580,5 +591,6 @@ These do not change the architecture, only the cost model and copy accuracy:
 2. The precise "path Speed Limits is billed as Route-Traveled + Speed-Limits" wording.
 3. The exact shared per-minute quota figure.
 4. The current Asset Tracking licence cost and onboarding lead time.
-5. Whether the Navigation SDK speed-limit path is commercially preferable to the Asset
-   Tracking licence for this fleet.
+5. Whether the Navigation SDK path is an acceptable *product* alternative — noting (§8.8) it
+   is **not** a drop-in posted-limit source: it surfaces only a percentage-over/severity
+   verdict (no raw limit, no road `placeId`) and requires an active navigation session.
