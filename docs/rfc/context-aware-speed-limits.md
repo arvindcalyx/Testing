@@ -173,6 +173,45 @@ of adding it:
 | A `SafetyConnectCommunicator` change (e.g., pass the posted limit to the host) | The overspeed *event* is unchanged; only the *decision threshold* changes. | Public-API change for no required capability. (Noted as an optional future extension.) |
 | On-device persistence / disk cache of limits | In-memory volatile suffices within a continuous trip; cross-trip/cross-user caching belongs in the backend proxy. | Storage + invalidation complexity for marginal gain. |
 
+### 3.4 Rejected alternative — mutating `maxSpeedThreshold` at runtime
+
+A natural "even smaller" variant is to add no new state at all: keep the entire overspeed
+pipeline as-is and simply **overwrite** `SafetyConnectSDK.sensorFilters.maxSpeedThreshold`
+with the current road's limit as the vehicle changes segments, letting `handleValidSpeed`
+compare against it unchanged. The field is `var Float?`, so the type permits it. It is
+rejected for four code-grounded reasons.
+
+- **Why it looks simpler.** It introduces zero new fields and reuses the one existing
+  comparand slot, leaving `handleValidSpeed` seemingly untouched.
+- **It breaks the fallback model.** `maxSpeedThreshold` is the **only stored copy** of the
+  host-configured threshold (copied once in `initializeSensorFilter`, read only at
+  `handleValidSpeed`). The fail-safe needs both the road limit *and* the configured default
+  available at the same instant (`roadLimit ?: maxSpeedThreshold`). Overwriting the slot
+  discards the configured default, so the next unmapped segment, dead zone, or failed
+  lookup has no correct value to fall back to — forcing the original to be preserved
+  elsewhere, which re-introduces (and enlarges) the very state the variant set out to
+  remove. State is not reduced, only moved.
+- **`null` cannot represent "unknown" here.** The decision reads
+  `(maxSpeedThreshold ?: 0f) <= medianSpeed`. Setting the slot to `null` to signal "limit
+  unknown" collapses to `0 <= medianSpeed`, firing on essentially every moving reading — a
+  false-positive firehose, the opposite of the BRD goal. Representing "unknown" in this slot
+  therefore also forces an edit to the decision site, defeating the "pipeline unchanged"
+  premise. A dedicated `currentRoadLimit: Float?` uses `null` cleanly because the fallback
+  expression, not `?: 0f`, interprets it.
+- **Configuration vs. runtime state.** `maxSpeedThreshold` lives on the process-global,
+  multi-reader `sensorFilters` and outlives any service instance; road context is per-trip
+  and is cleared in `cleanup()`. The codebase already separates configuration
+  (`SensorFilters`) from per-feature runtime state (`SpeedManager` owns speed state,
+  `TripGate` owns `isDriving`). A `currentRoadLimit` field on the tracker follows that
+  pattern and matches the road-context lifecycle; continuously writing the shared config
+  field instead blurs "what the host set" with "what the road said" and turns a
+  write-once-at-init value into a cross-thread, cross-lifecycle mutable — for no reduction
+  in moving parts.
+
+**Conclusion:** the chosen design (one nullable field, `currentRoadLimit ?: maxSpeedThreshold`)
+is both smaller in real delta and safer — it keeps `maxSpeedThreshold` as the pristine,
+always-available fallback, which is the entire point of the fail-safe.
+
 ---
 
 ## 4. Sequence Diagrams
