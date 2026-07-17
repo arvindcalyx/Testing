@@ -9,13 +9,13 @@ proprietary values are stored here — only status.
 
 | # | Decision | Sandbox | Office | Transferred | Notes |
 |---|----------|---------|--------|-------------|-------|
-| D1 | Four telematics fixes (see D1) | ✓ in baseline | ❓ unknown | — | Resolve at next session start: do these exist in the office repo? |
+| D1 | Four telematics fixes (see D1) | ✓ in baseline | ✓ implemented | ✓ confirmed S3 | Confirmed present in office at Session 3 start (user confirmation). |
 | D2 | Regression root cause = IN_VEHICLE trip gate | ✓ analysed | n/a | — | Analysis, not a transferable change. |
-| D3 | `DEBUG_BYPASS_TRIP_GATE` debug flag | ✓ in sandbox | 🚫 will-not-transfer | — | Debug experiment only; NOT the production fix. |
-| D4 | Road-aware speed limits (minimal design + refresh policy) | ◐ designed, not validated | ✗ not implemented | — | Prototype/validate before any office transfer. |
+| D3 | `DEBUG_BYPASS_TRIP_GATE` debug flag | ✓ in sandbox | ⚠️ present (stopgap) | ✓ confirmed S3 | Transferred despite the will-not-transfer intent: office mirrors the debug bypass (sandbox PR #1, whose body notes it mirrors a prod debug change). Stopgap, **not** the production fix — office now runs with the gate neutralised; must be superseded by the real trip-gate fix (HANDOFF open item 1). |
+| D4 | Context-aware road speed limits (re-derived RFC) | ◐ specified, not prototyped | ✗ not implemented | — | Full RFC in `docs/rfc/context-aware-speed-limits.md`. Feasibility-gated on the Asset Tracking licence; backend proxy is the production posture. Prototype/validate before any office transfer. |
 | D5 | Lean sandbox operating model | ✓ complete | n/a | — | Sandbox meta; not an office change. |
 
-Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · ❓ unknown · n/a not applicable
+Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · ⚠️ transferred as stopgap (caution) · ❓ unknown · n/a not applicable
 
 ## Decision Records
 
@@ -25,8 +25,8 @@ Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · 
   2 km/h (`ffb4dad`); (3) harsh driving requires accelerometer + GPS agreement at 3 m/s²
   (`afcab25`); (4) modern Activity Recognition + IN_VEHICLE gate (`087e0a9`).
 - **Rationale:** false-positive reduction on telematics alerts.
-- **Status:** present in the sandbox baseline. **Office status unknown** — resolve via the
-  session-start question.
+- **Status:** present in the sandbox baseline. **Confirmed implemented in the office repo** at
+  Session 3 start (user confirmation). Portability Tracker updated — D1 transferred.
 
 ### D2 — Regression root cause: the IN_VEHICLE trip gate
 - **Decision:** the "speed stays N/A / no overspeed / notification disappears" regression is
@@ -41,27 +41,54 @@ Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · 
 - **Decision:** add a flag in `SafetyConnectService` that neutralises only the gate's early
   return, leaving TripGate otherwise intact, to confirm the root cause.
 - **Rationale:** isolate the regression without reverting any fix.
-- **Status:** in the sandbox (`true` on `main`). **Debug experiment — must not be transferred
-  to office as the fix.** The real fix (relax the gate / add a host driving-state ingestion
-  API / fix AR delivery) is an open design item.
+- **Status:** in the sandbox (`true` on `main`). It was **intended** as a debug experiment that
+  must not be transferred to office as the fix — but at Session 3 start the user confirmed the
+  bypass is **present in the office/production repo** as a stopgap (sandbox PR #1 mirrored a
+  debug change already applied to prod). Consequence: office currently runs with the IN_VEHICLE
+  gate **neutralised**, not fixed. The real fix (relax the gate / add a host driving-state
+  ingestion API / fix AR delivery) is now the **priority open item** (HANDOFF item 1) and must
+  supersede the bypass in office.
 
-### D4 — Road-aware (context-aware) speed limits
+### D4 — Context-aware road speed limits
 - **Decision (direction):** replace the fixed `maxSpeedThreshold` comparand with the road's
-  posted limit (from Google Roads Speed Limits), falling back to the fixed threshold when
-  unavailable.
-- **Chosen design (minimal):** a single new class (`RoadSpeedLimitTracker`) that reuses
-  Google's `placeId` as road identity (no bespoke road abstraction), holds the current
-  segment's limit, resolves asynchronously via the existing network stack, and is read
-  synchronously in `handleValidSpeed`. Reuse `SpeedManager`, `CurrentLocation`, `Manager`,
-  `NetworkModule`, and the existing callbacks. (Supersedes an earlier 6-component design.)
-- **Refresh policy (recommended):** hybrid — time cadence (~15 s) with a min-distance floor
-  (~120 m) and a max-distance cap, a heading-change early trigger for turns/exits, and
-  segment-stability backoff; fall back to the fixed threshold on any gap.
-- **Key API facts:** `placeId` = road-segment identity; one Speed-Limits call with a `path`
-  returns snapped points **and** the limit; ≤100 points/request; units KPH; the endpoint
-  requires a Google Maps **Asset Tracking** license.
-- **Status:** **designed, not yet validated/prototyped.** The full exploration is retained in
-  git history (former `docs/rfc/road-aware-speed-limits.md`).
+  posted limit, falling back to the fixed threshold when unavailable.
+- **Deliverable (S3):** a re-derived, first-principles RFC — `docs/rfc/context-aware-speed-limits.md`
+  — with all nine sections (gap analysis, architecture, component responsibilities, sequence
+  diagrams, API changes, config, file-by-file inventory, risks, minimum-viable rationale).
+  Supersedes the earlier 6-component draft (removed in D5; git history only).
+- **Chosen design (minimal):** one new class `RoadSpeedLimitTracker` — async-resolves the
+  posted limit off the main thread (reusing OkHttp/Gson via a **dedicated short-timeout
+  client**, not the crash client), caches it in a single `@Volatile Float?`, read
+  **synchronously** at `handleValidSpeed` as `currentRoadLimit ?: maxSpeedThreshold`.
+  **Fail-safe:** unknown / stale / disabled / unlicensed / timeout → `null` → today's exact
+  behaviour (can only reduce false positives, never regress). No `SpeedManager` /
+  `CurrentLocation` / `TripGate` / callback changes; **no dependency on
+  `DEBUG_BYPASS_TRIP_GATE`**; manifest already has `INTERNET`.
+- **Minimum-architecture pass (S3, reconciled with an independent review):** 2 config fields
+  (`isRoadSpeedLimitEnabled`, `roadSpeedLimitEndpoint`) + their copy-list entries; a 2-rule
+  refresh policy (time cadence + a **load-bearing staleness cap** that expires to `null`);
+  trimmed DTOs. Consciously deferred to validation: tolerance band, on-device API-key field,
+  distance/heading signals, placeId-stability backoff, Collecting-phase warm-up.
+- **Production posture:** the Roads key **cannot be Android-app-restricted** (web-service
+  key, IP-only) and Speed Limits needs a licensed key, so the SDK is endpoint-agnostic and
+  production routes through a **backend proxy** (holds the key server-side, mirrors the
+  Google response shape, enables cross-user `placeId → limit` caching). The proxy is a
+  separate backend deliverable (open item).
+- **Rejected alternatives (in the RFC):** mutating `maxSpeedThreshold` in place — destroys
+  the fallback, `null → 0f` fires on every reading, couples config with runtime state (§3.4);
+  the **Navigation SDK** as a drop-in limit source — it exposes only a percentage-over /
+  severity verdict (`SpeedingListener`), **not** the raw limit or a road `placeId`, and needs
+  an active navigation session (§8.8).
+- **Why a refresh policy at all:** road identity (`placeId`) is a **server-side output of a
+  billable Google call**, not a locally observable trigger, so an on-device cadence is
+  unavoidable; `placeId`-change is post-call feedback, not an initiating trigger (§6.3).
+- **Key API facts (verified July 2026 via search index — `developers.google.com` is
+  egress-blocked here):** Speed Limits still **Asset-Tracking-licence-gated** (sales-
+  negotiated, not self-serve); one `path` call returns snapped points + limit + `placeId`;
+  ≤100 points/request; units KPH; `snapToRoads`/`nearestRoads` are unlicensed and return
+  `placeId`. Exact prices/quota are flagged **[VERIFY LIVE]** in the RFC.
+- **Status:** **specified (RFC complete), not prototyped/validated.** Feasibility gated on
+  the Asset Tracking licence. Office: not implemented.
 
 ### D5 — Lean sandbox operating model
 - **Decision:** adopt a 5-document spine (`CLAUDE.md`, `CURRENT_IMPLEMENTATION.md`,
