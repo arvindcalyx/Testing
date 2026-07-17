@@ -9,13 +9,13 @@ proprietary values are stored here — only status.
 
 | # | Decision | Sandbox | Office | Transferred | Notes |
 |---|----------|---------|--------|-------------|-------|
-| D1 | Four telematics fixes (see D1) | ✓ in baseline | ❓ unknown | — | Resolve at next session start: do these exist in the office repo? |
+| D1 | Four telematics fixes (see D1) | ✓ in baseline | ✓ implemented | ✓ confirmed S3 | Confirmed present in office at Session 3 start (user confirmation). |
 | D2 | Regression root cause = IN_VEHICLE trip gate | ✓ analysed | n/a | — | Analysis, not a transferable change. |
-| D3 | `DEBUG_BYPASS_TRIP_GATE` debug flag | ✓ in sandbox | 🚫 will-not-transfer | — | Debug experiment only; NOT the production fix. |
+| D3 | `DEBUG_BYPASS_TRIP_GATE` debug flag | ✓ in sandbox | ⚠️ present (stopgap) | ✓ confirmed S3 | Transferred despite the will-not-transfer intent: office mirrors the debug bypass (sandbox PR #1, whose body notes it mirrors a prod debug change). Stopgap, **not** the production fix — office now runs with the gate neutralised; must be superseded by the real trip-gate fix (HANDOFF open item 1). |
 | D4 | Road-aware speed limits (minimal design + refresh policy) | ◐ designed, not validated | ✗ not implemented | — | Prototype/validate before any office transfer. |
 | D5 | Lean sandbox operating model | ✓ complete | n/a | — | Sandbox meta; not an office change. |
 
-Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · ❓ unknown · n/a not applicable
+Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · ⚠️ transferred as stopgap (caution) · ❓ unknown · n/a not applicable
 
 ## Decision Records
 
@@ -25,8 +25,8 @@ Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · 
   2 km/h (`ffb4dad`); (3) harsh driving requires accelerometer + GPS agreement at 3 m/s²
   (`afcab25`); (4) modern Activity Recognition + IN_VEHICLE gate (`087e0a9`).
 - **Rationale:** false-positive reduction on telematics alerts.
-- **Status:** present in the sandbox baseline. **Office status unknown** — resolve via the
-  session-start question.
+- **Status:** present in the sandbox baseline. **Confirmed implemented in the office repo** at
+  Session 3 start (user confirmation). Portability Tracker updated — D1 transferred.
 
 ### D2 — Regression root cause: the IN_VEHICLE trip gate
 - **Decision:** the "speed stays N/A / no overspeed / notification disappears" regression is
@@ -41,9 +41,13 @@ Legend: ✓ done · ◐ partial · ✗ not started · 🚫 will-not-transfer · 
 - **Decision:** add a flag in `SafetyConnectService` that neutralises only the gate's early
   return, leaving TripGate otherwise intact, to confirm the root cause.
 - **Rationale:** isolate the regression without reverting any fix.
-- **Status:** in the sandbox (`true` on `main`). **Debug experiment — must not be transferred
-  to office as the fix.** The real fix (relax the gate / add a host driving-state ingestion
-  API / fix AR delivery) is an open design item.
+- **Status:** in the sandbox (`true` on `main`). It was **intended** as a debug experiment that
+  must not be transferred to office as the fix — but at Session 3 start the user confirmed the
+  bypass is **present in the office/production repo** as a stopgap (sandbox PR #1 mirrored a
+  debug change already applied to prod). Consequence: office currently runs with the IN_VEHICLE
+  gate **neutralised**, not fixed. The real fix (relax the gate / add a host driving-state
+  ingestion API / fix AR delivery) is now the **priority open item** (HANDOFF item 1) and must
+  supersede the bypass in office.
 
 ### D4 — Road-aware (context-aware) speed limits
 - **Decision (direction):** replace the fixed `maxSpeedThreshold` comparand with the road's
